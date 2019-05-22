@@ -6,8 +6,7 @@
 
 # 1，发起转账
 
-
-
+```
 public static void main(String[] args) {
         Web3j web3j = Web3j.build(new HttpService("节点地址"));
         String toAddress = "收款地址";
@@ -27,3 +26,4 @@ public static void main(String[] args) {
             e.printStackTrace();
         }
     }
+```
