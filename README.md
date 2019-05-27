@@ -154,7 +154,7 @@ public class Transfer extends ManagedTransaction {
 ```
 <br/>
 
-###  <a name="RawTransactionManager">RawTransactionManager.java</a><a href="#home">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;返回</a>
+###  <a name="RawTransactionManager">RawTransactionManager.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
 ```java
 package org.web3j.tx;
 
@@ -300,7 +300,7 @@ public class RawTransactionManager extends TransactionManager {
 ```
 <br/>
 
-###  <a name="Sign">Sign.java</a><a href="#home">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;返回</a>
+###  <a name="Sign">Sign.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
 ```java
 package org.web3j.crypto;
 
@@ -730,7 +730,7 @@ public class Sign {
 
 <br/>
 
-###  <a name="SignedRawTransaction">SignedRawTransaction.java</a><a href="#home">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;返回</a>
+###  <a name="SignedRawTransaction">SignedRawTransaction.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
 ```java
 package org.web3j.crypto;
 
@@ -808,7 +808,7 @@ public class SignedRawTransaction extends RawTransaction {
 
 <br/>
 
-###  <a name="TransactionEncoder">TransactionEncoder.java</a><a href="#home">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;返回</a>
+###  <a name="TransactionEncoder">TransactionEncoder.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
 
 ```java
 package org.web3j.crypto;
