@@ -1,6 +1,6 @@
 # **前言：**
 
->tweb3j是基于web3j源码修改部分代码，主要是涉及chainId的修改，适用于通过Java服务调用TrueChain主网以及测试网相关功能。具体修改的文件可参考示例代码下面的涉及修改的<a href="#home">Java</a>文件。另外相关修改的模块已打成jar包可提供调用，在<a href="https://github.com/truechain/tweb3j/tree/master/org.tweb3j.jar">org.tweb3j.jar</a>目录中。
+>tweb3j是基于web3j源码修改部分代码，主要是涉及chainId的修改以及代付gas费。适用于通过Java服务调用TrueChain主网以及测试网相关功能。具体修改的文件可参考示例代码下面的涉及修改的<a href="#home">Java</a>文件。另外相关修改的模块已打成jar包可提供调用，在<a href="https://github.com/truechain/tweb3j/tree/master/org.tweb3j.jar">org.tweb3j.jar</a>目录中。
 
 <br/>
 
@@ -8,7 +8,7 @@
 
 ```java
 /*
-* 发起转账
+* 发起转账 示例
 */
 public static void main(String[] args) {
         Web3j web3j = Web3j.build(new HttpService("节点地址"));
@@ -29,6 +29,63 @@ public static void main(String[] args) {
             e.printStackTrace();
         }
     }
+
+	
+/*
+* 代付gas费 示例
+*/
+public static void main(String[] args) throws InterruptedException, ExecutionException {
+    try {
+        Web3j web3jt = Web3j.build(new HttpService("http://39.98.43.179:8888"));
+        String to = "接收者账户";
+        
+        //代付者账户
+        String payment = "代付者账户";
+        
+        BigInteger value = Convert.toWei("1", Convert.Unit.ETHER).toBigInteger();
+        //发送者的扣费数量 可为空
+        BigInteger fee   = Convert.toWei("1", Convert.Unit.ETHER).toBigInteger();
+        BigInteger gaslimit  = Convert.toWei("210000", Convert.Unit.WEI).toBigInteger();
+        BigInteger gasprice  = Convert.toWei("1", Convert.Unit.GWEI).toBigInteger();
+        
+        //发送者账户
+        Credentials credentials = Credentials.create("发送者账户 私钥");
+        String fromAddress = credentials.getAddress();
+        
+        //代付者账户
+        Credentials credentials_payment = Credentials.create("代付者账户 私钥");
+        
+        EthGetTransactionCount ethGetTransactionCount = web3jt
+                .ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get();
+        BigInteger nonce = ethGetTransactionCount.getTransactionCount();
+        int chainId = 18928;
+        
+        TrueRawTransaction trueRawTransaction = TrueRawTransaction.createTransaction(
+            nonce,
+            gasprice,
+            gaslimit,
+            to,
+            value,
+            "",
+            null,
+            payment);
+
+        byte[] signedMessage = TrueTransactionEncoder.signMessage_payment(trueRawTransaction, chainId, credentials,credentials_payment);
+        String hexValue = Numeric.toHexString(signedMessage);          
+        
+        EthSendTrueTransaction ethSendTrueTransaction = web3jt.ethSendTrueRawTransaction(hexValue).send();
+        if (ethSendTrueTransaction != null && !ethSendTrueTransaction.hasError()) {
+            String txHashLocal = Hash.sha3(hexValue);
+            String txHashRemote = ethSendTrueTransaction.getTransactionHash();
+            
+            System.out.println(" txHashLocal--->" + txHashLocal);
+            System.out.println("txHashRemote--->" + txHashRemote);
+            //......
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
 ```
 <br/>
 
@@ -38,6 +95,8 @@ public static void main(String[] args) {
     * org.web3j.tx
         * <a href="#Transfer">Transfer.java</a>
         * <a href="#RawTransactionManager">RawTransactionManager.java</a>
+		* <a href="#TrueRawTransactionManager">TrueRawTransactionManager.java</a>(新增)
+		* <a href="#TrueTransactionManager">TrueTransactionManager.java</a>(新增)
  <br/>  
  
 * ### *crypto模块*
@@ -45,6 +104,8 @@ public static void main(String[] args) {
         * <a href="#Sign">Sign.java</a>
         * <a href="#SignedRawTransaction">SignedRawTransaction.java</a>
         * <a href="#TransactionEncoder">TransactionEncoder.java</a>
+		* <a href="#TrueRawTransaction">TrueRawTransaction.java</a>(新增)
+		* <a href="#TrueTransactionEncoder">TrueTransactionEncoder.java</a>(新增)
  
  <br/>
 
@@ -59,10 +120,17 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.TrueRawTransaction;
+import org.web3j.crypto.TrueTransactionEncoder;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.RemoteCall;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.EthSendTrueTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
@@ -70,86 +138,163 @@ import org.web3j.utils.Numeric;
  * Class for performing Ether transactions on the Ethereum blockchain.
  */
 public class Transfer extends ManagedTransaction {
+    //代付gas示例
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        try {
+            Web3j web3jt = Web3j.build(new HttpService("http://39.98.43.179:8888"));
+            String to = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
+            
+            //代付者账户
+            String payment = "0x4cf807958b9F6D9fD9331397d7a89a079ef43288";
+            
+            BigInteger value = Convert.toWei("1", Convert.Unit.ETHER).toBigInteger();
+            //发送者的扣费数量 可为空
+            BigInteger fee   = Convert.toWei("1", Convert.Unit.ETHER).toBigInteger();
+            BigInteger gaslimit  = Convert.toWei("210000", Convert.Unit.WEI).toBigInteger();
+            BigInteger gasprice  = Convert.toWei("1", Convert.Unit.GWEI).toBigInteger();
+            
+            //发送者账户
+            Credentials credentials = Credentials.create("0x647EEEB80193A47A02D31939AF29EFA006DBE6DB45C8806AF764C18B262BB90B");
+            String fromAddress = credentials.getAddress();
+            
+            //代付者账户
+            Credentials credentials_payment = Credentials.create("0x06E95F58760688B722261B96E2B13BBE9A0E0F7B4541513E156A16B7D6CE1BAF");
+            
+            EthGetTransactionCount ethGetTransactionCount = web3jt
+                    .ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get();
+            BigInteger nonce = ethGetTransactionCount.getTransactionCount();
+            int chainId = 18928;
+            
+            TrueRawTransaction trueRawTransaction = TrueRawTransaction.createTransaction(
+                nonce,
+                gasprice,
+                gaslimit,
+                to,
+                value,
+                "",
+                null,
+                payment);
 
-    // This is the cost to send Ether between parties
-    public static final BigInteger GAS_LIMIT = BigInteger.valueOf(21000);
-
-    public Transfer(Web3j web3j, TransactionManager transactionManager) {
-        super(web3j, transactionManager);
-    }
-
-    /**
-     * Given the duration required to execute a transaction, asyncronous execution is strongly
-     * recommended via {@link Transfer#sendFunds(String, BigDecimal, Convert.Unit)}.
-     *
-     * @param toAddress destination address
-     * @param value amount to send
-     * @param unit of specified send
-     *
-     * @return {@link Optional} containing our transaction receipt
-     * @throws ExecutionException if the computation threw an
-     *                            exception
-     * @throws InterruptedException if the current thread was interrupted
-     *                              while waiting
-     * @throws TransactionException if the transaction was not mined while waiting
-     */
-    private TransactionReceipt send(String toAddress, BigDecimal value, Convert.Unit unit)
-            throws IOException, InterruptedException,
-            TransactionException {
-
-        BigInteger gasPrice = requestCurrentGasPrice();
-        return send(toAddress, value, unit, gasPrice, GAS_LIMIT);
-    }
-
-    private TransactionReceipt send(
-            String toAddress, BigDecimal value, Convert.Unit unit, BigInteger gasPrice,
-            BigInteger gasLimit) throws IOException, InterruptedException,
-            TransactionException {
-
-        BigDecimal weiValue = Convert.toWei(value, unit);
-        if (!Numeric.isIntegerValue(weiValue)) {
-            throw new UnsupportedOperationException(
-                    "Non decimal Wei value provided: " + value + " " + unit.toString()
-                            + " = " + weiValue + " Wei");
+            byte[] signedMessage = TrueTransactionEncoder.signMessage_payment(trueRawTransaction, chainId, credentials,credentials_payment);
+            String hexValue = Numeric.toHexString(signedMessage);          
+            
+            EthSendTrueTransaction ethSendTrueTransaction = web3jt.ethSendTrueRawTransaction(hexValue).send();
+            if (ethSendTrueTransaction != null && !ethSendTrueTransaction.hasError()) {
+                String txHashLocal = Hash.sha3(hexValue);
+                String txHashRemote = ethSendTrueTransaction.getTransactionHash();
+                
+                System.out.println(" txHashLocal--->" + txHashLocal);
+                System.out.println("txHashRemote--->" + txHashRemote);
+                //......
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        String resolvedAddress = ensResolver.resolve(toAddress);
-        return send(resolvedAddress, "", weiValue.toBigIntegerExact(), gasPrice, gasLimit);
     }
+    
+    //转账示例
+    public static void main2(String[] args) {
+        // http://39.98.43.179:8888
+        // https://rpc.truescan.net/testnet
+        // Web3j web3j = Web3j.build(new
+        // HttpService("https://rpc.truescan.net/testnet"));
+        Web3j web3j = Web3j.build(new HttpService("http://39.98.43.179:8888"));
+        String toAddress = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
+        Credentials credentials = Credentials.create("0x647EEEB80193A47A02D31939AF29EFA006DBE6DB45C8806AF764C18B262BB90B");
+        int chainId = 18928;
 
-    //新增chainId参数
-    public static RemoteCall<TransactionReceipt> sendFunds(
-            Web3j web3j, Credentials credentials,
-            String toAddress, BigDecimal value, Convert.Unit unit, int chainId) throws InterruptedException,
-            IOException, TransactionException {
+        try {
+            TransactionReceipt transactionReceipt = Transfer
+                    .sendFunds(web3j, credentials, toAddress, new BigDecimal("1"), Convert.Unit.ETHER, chainId).send();
 
-        TransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
-
-        return new RemoteCall<>(() ->
-                new Transfer(web3j, transactionManager).send(toAddress, value, unit));
+            String transactionHash = transactionReceipt.getTransactionHash();
+            System.out.println("transactionHash------------------->" + transactionHash);
+        } catch (TransactionException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+    
+	// This is the cost to send Ether between parties
+	public static final BigInteger GAS_LIMIT = BigInteger.valueOf(21000);
 
-    /**
-     * Execute the provided function as a transaction asynchronously. This is intended for one-off
-     * fund transfers. For multiple, create an instance.
-     *
-     * @param toAddress destination address
-     * @param value amount to send
-     * @param unit of specified send
-     *
-     * @return {@link RemoteCall} containing executing transaction
-     */
-    public RemoteCall<TransactionReceipt> sendFunds(
-            String toAddress, BigDecimal value, Convert.Unit unit) {
-        return new RemoteCall<>(() -> send(toAddress, value, unit));
-    }
+	public Transfer(Web3j web3j, TransactionManager transactionManager) {
+		super(web3j, transactionManager);
+	}
 
-    public RemoteCall<TransactionReceipt> sendFunds(
-            String toAddress, BigDecimal value, Convert.Unit unit, BigInteger gasPrice,
-            BigInteger gasLimit) {
-        return new RemoteCall<>(() -> send(toAddress, value, unit, gasPrice, gasLimit));
-    }
+	/**
+	 * Given the duration required to execute a transaction, asyncronous execution
+	 * is strongly recommended via
+	 * {@link Transfer#sendFunds(String, BigDecimal, Convert.Unit)}.
+	 *
+	 * @param toAddress
+	 *            destination address
+	 * @param value
+	 *            amount to send
+	 * @param unit
+	 *            of specified send
+	 *
+	 * @return {@link Optional} containing our transaction receipt
+	 * @throws ExecutionException
+	 *             if the computation threw an exception
+	 * @throws InterruptedException
+	 *             if the current thread was interrupted while waiting
+	 * @throws TransactionException
+	 *             if the transaction was not mined while waiting
+	 */
+	private TransactionReceipt send(String toAddress, BigDecimal value, Convert.Unit unit)
+			throws IOException, InterruptedException, TransactionException {
+
+		BigInteger gasPrice = requestCurrentGasPrice();
+		return send(toAddress, value, unit, gasPrice, GAS_LIMIT);
+	}
+
+	private TransactionReceipt send(String toAddress, BigDecimal value, Convert.Unit unit, BigInteger gasPrice,
+			BigInteger gasLimit) throws IOException, InterruptedException, TransactionException {
+
+		BigDecimal weiValue = Convert.toWei(value, unit);
+		if (!Numeric.isIntegerValue(weiValue)) {
+			throw new UnsupportedOperationException(
+					"Non decimal Wei value provided: " + value + " " + unit.toString() + " = " + weiValue + " Wei");
+		}
+
+		String resolvedAddress = ensResolver.resolve(toAddress);
+		return send(resolvedAddress, "", weiValue.toBigIntegerExact(), gasPrice, gasLimit);
+	}
+
+	public static RemoteCall<TransactionReceipt> sendFunds(Web3j web3j, Credentials credentials, String toAddress,
+			BigDecimal value, Convert.Unit unit, int chainId)
+			throws InterruptedException, IOException, TransactionException {
+
+		TransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
+
+		return new RemoteCall<>(() -> new Transfer(web3j, transactionManager).send(toAddress, value, unit));
+	}
+
+	/**
+	 * Execute the provided function as a transaction asynchronously. This is
+	 * intended for one-off fund transfers. For multiple, create an instance.
+	 *
+	 * @param toAddress
+	 *            destination address
+	 * @param value
+	 *            amount to send
+	 * @param unit
+	 *            of specified send
+	 *
+	 * @return {@link RemoteCall} containing executing transaction
+	 */
+	public RemoteCall<TransactionReceipt> sendFunds(String toAddress, BigDecimal value, Convert.Unit unit) {
+		return new RemoteCall<>(() -> send(toAddress, value, unit));
+	}
+
+	public RemoteCall<TransactionReceipt> sendFunds(String toAddress, BigDecimal value, Convert.Unit unit,
+			BigInteger gasPrice, BigInteger gasLimit) {
+		return new RemoteCall<>(() -> send(toAddress, value, unit, gasPrice, gasLimit));
+	}
 }
+
 
 ```
 <br/>
@@ -359,10 +504,6 @@ public class Sign {
         return signMessage(message, keyPair, true);
     }
     
-    public static SignatureDataP signMessageP(byte[] message, ECKeyPair keyPair) {
-        return signMessageP(message, keyPair, true);
-    }
-
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
         byte[] messageHash;
@@ -389,7 +530,6 @@ public class Sign {
 
         int headerByte = recId + 27;
 
-		//兼容TrueChain主网修改chainId类型
         // 1 header + 32 bytes for R + 32 bytes for S
         //byte v = (byte) headerByte;
         int v = headerByte;
@@ -399,7 +539,7 @@ public class Sign {
         return new SignatureData(v, r, s);
     }
     
-    public static SignatureDataP signMessageP(byte[] message, ECKeyPair keyPair, boolean needToHash) {
+    public static SignatureData signMessageP(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
         byte[] messageHash;
         if (needToHash) {
@@ -430,7 +570,7 @@ public class Sign {
         byte[] r = Numeric.toBytesPadded(sig.r, 32);
         byte[] s = Numeric.toBytesPadded(sig.s, 32);
 
-        return new SignatureDataP(v, r, s);
+        return new SignatureData(v, r, s);
     }
 
     /**
@@ -620,7 +760,6 @@ public class Sign {
         return new BigInteger(1, Arrays.copyOfRange(bits, 1, bits.length));  // remove prefix
     }
 
-	//兼容TrueChain主网修改chainId类型
     public static class SignatureData {
         private final int v;
         private final byte[] r;
@@ -654,58 +793,6 @@ public class Sign {
             }
 
             SignatureData that = (SignatureData) o;
-
-            if (v != that.v) {
-                return false;
-            }
-            if (!Arrays.equals(r, that.r)) {
-                return false;
-            }
-            return Arrays.equals(s, that.s);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = (int) v;
-            result = 31 * result + Arrays.hashCode(r);
-            result = 31 * result + Arrays.hashCode(s);
-            return result;
-        }
-    }
-    
-    public static class SignatureDataP {
-        private final int v;
-        private final byte[] r;
-        private final byte[] s;
-
-        public SignatureDataP(int v, byte[] r, byte[] s) {
-            this.v = v;
-            this.r = r;
-            this.s = s;
-        }
-
-        public int getV() {
-            return v;
-        }
-
-        public byte[] getR() {
-            return r;
-        }
-
-        public byte[] getS() {
-            return s;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            SignatureDataP that = (SignatureDataP) o;
 
             if (v != that.v) {
                 return false;
@@ -914,4 +1001,543 @@ public class TransactionEncoder {
 }
 
 ```
+
 <br/>
+
+###  <a name="TrueRawTransactionManager">TrueRawTransactionManager.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
+
+```java
+package org.web3j.tx;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
+import org.web3j.crypto.TrueRawTransaction;
+import org.web3j.crypto.TrueTransactionEncoder;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.EthSendTrueTransaction;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.exceptions.TxHashMismatchException;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
+import org.web3j.utils.TxHashVerifier;
+
+/**
+ * TransactionManager implementation using Ethereum wallet file to create and sign transactions
+ * locally.
+ *
+ * <p>This transaction manager provides support for specifying the chain id for transactions as per
+ * <a href="https://github.com/ethereum/EIPs/issues/155">EIP155</a>, as well as for locally signing
+ * RawTransaction instances without broadcasting them.
+ */
+public class TrueRawTransactionManager extends TrueTransactionManager {
+
+    private final Web3j web3j;
+    final Credentials credentials;
+
+    static int chainId;
+
+    protected TxHashVerifier txHashVerifier = new TxHashVerifier();
+    
+    public TrueRawTransactionManager(Web3j web3j, Credentials credentials, byte chainId) {
+        super(web3j, credentials.getAddress());
+
+        this.web3j = web3j;
+        this.credentials = credentials;
+
+        this.chainId = chainId;
+    }
+
+    public TrueRawTransactionManager(
+            Web3j web3j, Credentials credentials, byte chainId,
+            TransactionReceiptProcessor transactionReceiptProcessor) {
+        super(transactionReceiptProcessor, credentials.getAddress());
+
+        this.web3j = web3j;
+        this.credentials = credentials;
+
+        this.chainId = chainId;
+    }
+
+    public TrueRawTransactionManager(
+            Web3j web3j, Credentials credentials, byte chainId, int attempts, long sleepDuration) {
+        super(web3j, attempts, sleepDuration, credentials.getAddress());
+
+        this.web3j = web3j;
+        this.credentials = credentials;
+
+        this.chainId = chainId;
+    }
+
+    public TrueRawTransactionManager(Web3j web3j, Credentials credentials) {
+        this(web3j, credentials, ChainId.NONE);
+    }
+
+    public TrueRawTransactionManager(
+            Web3j web3j, Credentials credentials, int attempts, int sleepDuration) {
+        this(web3j, credentials, ChainId.NONE, attempts, sleepDuration);
+    }
+
+    protected BigInteger getNonce() throws IOException {
+        EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
+                credentials.getAddress(), DefaultBlockParameterName.PENDING).send();
+
+        return ethGetTransactionCount.getTransactionCount();
+    }
+
+    public TxHashVerifier getTxHashVerifier() {
+        return txHashVerifier;
+    }
+
+    public void setTxHashVerifier(TxHashVerifier txHashVerifier) {
+        this.txHashVerifier = txHashVerifier;
+    }
+
+    @Override
+    public EthSendTrueTransaction sendTrueTransaction(
+            BigInteger gasPrice, BigInteger gasLimit, String to,
+            String data, BigInteger value, BigInteger fee, String payment) throws IOException {
+
+        BigInteger nonce = getNonce();
+
+        TrueRawTransaction trueRawTransaction = TrueRawTransaction.createTransaction(
+                nonce,
+                gasPrice,
+                gasLimit,
+                to,
+                value,
+                data,
+                fee,
+                payment);
+
+        return signAndSend(trueRawTransaction);
+    }
+    
+    /*
+     * @param rawTransaction a RawTransaction istance to be signed
+     * @return The transaction signed and encoded without ever broadcasting it
+     */
+    public String sign(TrueRawTransaction trueRawTransaction) {
+
+        byte[] signedMessage;
+
+        if (chainId > ChainId.NONE) {
+            signedMessage = TrueTransactionEncoder.signMessage(trueRawTransaction, chainId, credentials);
+        } else {
+            signedMessage = TrueTransactionEncoder.signMessage(trueRawTransaction, credentials);
+        }
+
+        return Numeric.toHexString(signedMessage);
+    }
+
+    public EthSendTrueTransaction signAndSend(TrueRawTransaction trueRawTransaction)
+            throws IOException {
+        String hexValue = sign(trueRawTransaction);
+        EthSendTrueTransaction ethSendTrueTransaction = web3j.ethSendTrueRawTransaction(hexValue).send();
+
+        if (ethSendTrueTransaction != null && !ethSendTrueTransaction.hasError()) {
+            String txHashLocal = Hash.sha3(hexValue);
+            String txHashRemote = ethSendTrueTransaction.getTransactionHash();
+            if (!txHashVerifier.verify(txHashLocal, txHashRemote)) {
+                throw new TxHashMismatchException(txHashLocal, txHashRemote);
+            }
+        }
+
+        return ethSendTrueTransaction;
+    }
+}
+
+```
+
+<br/>
+
+###  <a name="TrueTransactionManager">TrueTransactionManager.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
+
+```java
+package org.web3j.tx;
+
+import java.io.IOException;
+import java.math.BigInteger;
+
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.EthSendTrueTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+
+import static org.web3j.protocol.core.JsonRpc2_0Web3j.DEFAULT_BLOCK_TIME;
+
+/**
+ * Transaction manager abstraction for executing transactions with Ethereum client via
+ * various mechanisms.
+ */
+public abstract class TrueTransactionManager {
+
+    public static final int DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH = 40;
+    public static final long DEFAULT_POLLING_FREQUENCY = DEFAULT_BLOCK_TIME;
+
+    private final TransactionReceiptProcessor transactionReceiptProcessor;
+    private final String fromAddress;
+
+    protected TrueTransactionManager(
+            TransactionReceiptProcessor transactionReceiptProcessor, String fromAddress) {
+        this.transactionReceiptProcessor = transactionReceiptProcessor;
+        this.fromAddress = fromAddress;
+    }
+
+    protected TrueTransactionManager(Web3j web3j, String fromAddress) {
+        this(new PollingTransactionReceiptProcessor(
+                        web3j, DEFAULT_POLLING_FREQUENCY, DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH),
+                fromAddress);
+    }
+
+    protected TrueTransactionManager(
+        Web3j web3j, int attempts, long sleepDuration, String fromAddress) {
+        this(new PollingTransactionReceiptProcessor(web3j, sleepDuration, attempts), fromAddress);
+    }
+
+    protected TransactionReceipt executeTransaction(
+            BigInteger gasPrice, BigInteger gasLimit, String to,
+            String data, BigInteger value, BigInteger fee, String payment)
+            throws IOException, TransactionException {
+
+        EthSendTrueTransaction ethSendTrueTransaction = sendTrueTransaction(
+                gasPrice, gasLimit, to, data, value,fee,payment);
+        return processResponse(ethSendTrueTransaction);
+    }
+
+    public abstract EthSendTrueTransaction sendTrueTransaction(
+            BigInteger gasPrice, BigInteger gasLimit, String to,
+            String data, BigInteger value, BigInteger fee, String payment)
+            throws IOException;
+
+    public String getFromAddress() {
+        return fromAddress;
+    }
+
+    private TransactionReceipt processResponse(EthSendTrueTransaction transactionResponse)
+            throws IOException, TransactionException {
+        if (transactionResponse.hasError()) {
+            throw new RuntimeException("Error processing transaction request: "
+                    + transactionResponse.getError().getMessage());
+        }
+
+        String transactionHash = transactionResponse.getTransactionHash();
+
+        return transactionReceiptProcessor.waitForTransactionReceipt(transactionHash);
+    }
+
+
+}
+
+```
+
+<br/>
+
+###  <a name="TrueRawTransaction">TrueRawTransaction.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
+
+```java
+package org.web3j.crypto;
+
+import java.math.BigInteger;
+
+import org.web3j.utils.Numeric;
+
+/**
+ * Transaction class used for signing transactions locally.<br>
+ * For the specification, refer to p4 of the <a href="http://gavwood.com/paper.pdf">
+ * yellow paper</a>.
+ */
+public class TrueRawTransaction {
+
+    private BigInteger nonce;
+    private BigInteger gasPrice;
+    private BigInteger gasLimit;
+    private String to;
+    private BigInteger value;
+    private String data;
+    
+    private String payment;//代付者账户
+    private BigInteger fee;//发送者的扣费数量
+    
+    protected TrueRawTransaction(BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
+                           BigInteger value, String data, BigInteger fee, String payment) {
+        this.nonce = nonce;
+        this.gasPrice = gasPrice;
+        this.gasLimit = gasLimit;
+        this.to = to;
+        this.value = value;
+        
+        this.fee = fee;
+        this.payment = payment;
+
+        if (data != null) {
+            this.data = Numeric.cleanHexPrefix(data);
+        }
+    }
+
+    public static TrueRawTransaction createContractTransaction(
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, BigInteger value,
+            String init, BigInteger fee, String payment) {
+
+        return new TrueRawTransaction(nonce, gasPrice, gasLimit, "", value, init,fee,payment);
+    }
+
+    public static TrueRawTransaction createEtherTransaction(
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
+            BigInteger value, BigInteger fee, String payment) {
+
+        return new TrueRawTransaction(nonce, gasPrice, gasLimit, to, value, "",fee,payment);
+
+    }
+
+    public static TrueRawTransaction createTransaction(
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger fee, String payment) {
+        return createTransaction(nonce, gasPrice, gasLimit, to, BigInteger.ZERO, data,fee,payment);
+    }
+
+    public static TrueRawTransaction createTransaction(
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
+            BigInteger value, String data, BigInteger fee, String payment) {
+
+        return new TrueRawTransaction(nonce, gasPrice, gasLimit, to, value, data,fee,payment);
+    }
+
+    public BigInteger getNonce() {
+        return nonce;
+    }
+
+    public BigInteger getGasPrice() {
+        return gasPrice;
+    }
+
+    public BigInteger getGasLimit() {
+        return gasLimit;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public BigInteger getValue() {
+        return value;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public BigInteger getFee() {
+        return fee;
+    }
+
+    public String getPayment() {
+        return payment;
+    }
+
+}
+
+```
+
+<br/>
+
+###  <a name="TrueTransactionEncoder">TrueTransactionEncoder.java</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#home">返回</a>
+
+```java
+package org.web3j.crypto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpString;
+import org.web3j.rlp.RlpType;
+import org.web3j.utils.Bytes;
+import org.web3j.utils.Numeric;
+
+/**
+ * Create RLP encoded transaction, implementation as per p4 of the <a href="http://gavwood.com/paper.pdf">yellow
+ * paper</a>.
+ */
+public class TrueTransactionEncoder {
+    
+    public static byte[] signMessage(TrueRawTransaction trueRawTransaction, Credentials credentials) {
+        byte[] encodedTransaction = encode(trueRawTransaction);
+        Sign.SignatureData signatureData = Sign.signMessage(
+                encodedTransaction, credentials.getEcKeyPair());
+
+        return encode(trueRawTransaction, signatureData);
+    }
+
+    public static byte[] signMessage(
+        TrueRawTransaction trueRawTransaction, int chainId, Credentials credentials) {
+        byte[] encodedTransaction = encode(trueRawTransaction, chainId);
+        
+        Sign.SignatureData signatureData = Sign.signMessage(
+                encodedTransaction, credentials.getEcKeyPair());
+        Sign.SignatureData eip155SignatureData = createEip155SignatureData(signatureData, chainId);
+        
+        //二次签名
+        byte[] encodedTransactionP = encodeP(trueRawTransaction,eip155SignatureData,chainId);
+        Sign.SignatureData signatureDataP = Sign.signMessage(encodedTransactionP, credentials.getEcKeyPair());
+        
+        Sign.SignatureData eip155SignatureDataP = createEip155SignatureData(signatureDataP, chainId);
+        return encodeP(trueRawTransaction, eip155SignatureData,eip155SignatureDataP);
+    }
+    
+    //代付签名
+    public static byte[] signMessage_payment(TrueRawTransaction trueRawTransaction, int chainId,
+        Credentials credentials, Credentials credentials_payment) {
+        byte[] encodedTransaction = encode(trueRawTransaction, chainId);
+
+        Sign.SignatureData signatureData = Sign.signMessage(encodedTransaction, credentials.getEcKeyPair());
+        Sign.SignatureData eip155SignatureData = createEip155SignatureData(signatureData, chainId);
+
+        // 二次签名
+        byte[] encodedTransactionP = encodeP(trueRawTransaction, eip155SignatureData, chainId);
+        Sign.SignatureData signatureDataP = Sign.signMessage(encodedTransactionP, credentials_payment.getEcKeyPair());
+
+        Sign.SignatureData eip155SignatureDataP = createEip155SignatureData(signatureDataP, chainId);
+        return encodeP(trueRawTransaction, eip155SignatureData, eip155SignatureDataP);
+    }
+
+    public static Sign.SignatureData createEip155SignatureData(Sign.SignatureData signatureData, int chainId) {
+        int v = signatureData.getV() + (chainId << 1) + 8;
+
+        return new Sign.SignatureData(v, signatureData.getR(), signatureData.getS());
+    }
+
+    public static byte[] encode(TrueRawTransaction trueRawTransaction) {
+        return encode(trueRawTransaction, null);
+    }
+
+    public static byte[] encode(TrueRawTransaction trueRawTransaction, int chainId) {
+        Sign.SignatureData signatureData = new Sign.SignatureData(chainId, new byte[] {}, new byte[] {});
+        return encode(trueRawTransaction, signatureData);
+    }
+
+    public static byte[] encodeP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData, int chainId) {
+        Sign.SignatureData signatureDataP = new Sign.SignatureData(chainId, new byte[] {}, new byte[] {});
+        return encodeP(trueRawTransaction, signatureData, signatureDataP);
+    }
+
+    private static byte[] encode(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData) {
+        List<RlpType> values = asRlpValues(trueRawTransaction, signatureData);
+        RlpList rlpList = new RlpList(values);
+        return RlpEncoder.encode(rlpList);
+    }
+
+    private static byte[] encodeP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData,
+        Sign.SignatureData signatureDataP) {
+        List<RlpType> values = asRlpValuesP(trueRawTransaction, signatureData, signatureDataP);
+        RlpList rlpList = new RlpList(values);
+        return RlpEncoder.encode(rlpList);
+    }
+
+    static List<RlpType> asRlpValues(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData) {
+        List<RlpType> result = new ArrayList<>();
+
+        result.add(RlpString.create(trueRawTransaction.getNonce()));
+        result.add(RlpString.create(trueRawTransaction.getGasPrice()));
+        result.add(RlpString.create(trueRawTransaction.getGasLimit()));
+
+        // an empty to address (contract creation) should not be encoded as a numeric 0 value
+        String to = trueRawTransaction.getTo();
+        if (to != null && to.length() > 0) {
+            // addresses that start with zeros should be encoded with the zeros included, not
+            // as numeric values
+            result.add(RlpString.create(Numeric.hexStringToByteArray(to)));
+        } else {
+            result.add(RlpString.create(""));
+        }
+
+        result.add(RlpString.create(trueRawTransaction.getValue()));
+
+        // value field will already be hex encoded, so we need to convert into binary first
+        byte[] data = Numeric.hexStringToByteArray(trueRawTransaction.getData());
+        result.add(RlpString.create(data));
+
+        result.add(RlpString.create(Numeric.hexStringToByteArray(trueRawTransaction.getPayment())));
+        if (trueRawTransaction.getFee() == null) {
+            result.add(RlpString.create(0));
+        } else {
+            result.add(RlpString.create(trueRawTransaction.getFee()));
+        }
+
+        if (signatureData != null) {
+            result.add(RlpString.create(signatureData.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getR())));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getS())));
+        }
+        return result;
+    }
+
+    static List<RlpType> asRlpValuesP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData,
+        Sign.SignatureData signatureDataP) {
+        List<RlpType> result = new ArrayList<>();
+
+        result.add(RlpString.create(trueRawTransaction.getNonce()));
+        result.add(RlpString.create(trueRawTransaction.getGasPrice()));
+        result.add(RlpString.create(trueRawTransaction.getGasLimit()));
+
+        // an empty to address (contract creation) should not be encoded as a numeric 0 value
+        String to = trueRawTransaction.getTo();
+        if (to != null && to.length() > 0) {
+            // addresses that start with zeros should be encoded with the zeros included, not
+            // as numeric values
+            result.add(RlpString.create(Numeric.hexStringToByteArray(to)));
+        } else {
+            result.add(RlpString.create(""));
+        }
+
+        result.add(RlpString.create(trueRawTransaction.getValue()));
+
+        // value field will already be hex encoded, so we need to convert into binary first
+        byte[] data = Numeric.hexStringToByteArray(trueRawTransaction.getData());
+        result.add(RlpString.create(data));
+
+        result.add(RlpString.create(Numeric.hexStringToByteArray(trueRawTransaction.getPayment())));
+        // result.add(RlpString.create(trueRawTransaction.getPayment()));
+        if (trueRawTransaction.getFee() == null) {
+            result.add(RlpString.create(0));
+        } else {
+            result.add(RlpString.create(trueRawTransaction.getFee()));
+        }
+
+        if (signatureData != null) {
+            result.add(RlpString.create(signatureData.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getR())));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getS())));
+        }
+
+        if (signatureDataP != null) {
+            result.add(RlpString.create(signatureDataP.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureDataP.getR())));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureDataP.getS())));
+        }
+        // result.add(RlpString.create(chainId));
+
+        return result;
+    }
+}
+
+```
