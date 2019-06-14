@@ -55,10 +55,6 @@ public class Sign {
         return signMessage(message, keyPair, true);
     }
     
-    public static SignatureDataP signMessageP(byte[] message, ECKeyPair keyPair) {
-        return signMessageP(message, keyPair, true);
-    }
-
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
         byte[] messageHash;
@@ -94,7 +90,7 @@ public class Sign {
         return new SignatureData(v, r, s);
     }
     
-    public static SignatureDataP signMessageP(byte[] message, ECKeyPair keyPair, boolean needToHash) {
+    public static SignatureData signMessageP(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
         byte[] messageHash;
         if (needToHash) {
@@ -125,7 +121,7 @@ public class Sign {
         byte[] r = Numeric.toBytesPadded(sig.r, 32);
         byte[] s = Numeric.toBytesPadded(sig.s, 32);
 
-        return new SignatureDataP(v, r, s);
+        return new SignatureData(v, r, s);
     }
 
     /**
@@ -348,58 +344,6 @@ public class Sign {
             }
 
             SignatureData that = (SignatureData) o;
-
-            if (v != that.v) {
-                return false;
-            }
-            if (!Arrays.equals(r, that.r)) {
-                return false;
-            }
-            return Arrays.equals(s, that.s);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = (int) v;
-            result = 31 * result + Arrays.hashCode(r);
-            result = 31 * result + Arrays.hashCode(s);
-            return result;
-        }
-    }
-    
-    public static class SignatureDataP {
-        private final int v;
-        private final byte[] r;
-        private final byte[] s;
-
-        public SignatureDataP(int v, byte[] r, byte[] s) {
-            this.v = v;
-            this.r = r;
-            this.s = s;
-        }
-
-        public int getV() {
-            return v;
-        }
-
-        public byte[] getR() {
-            return r;
-        }
-
-        public byte[] getS() {
-            return s;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            SignatureDataP that = (SignatureDataP) o;
 
             if (v != that.v) {
                 return false;

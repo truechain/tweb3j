@@ -18,11 +18,11 @@ public class TrueRawTransaction {
     private BigInteger value;
     private String data;
     
-    private String fee;
-    private String payment;
+    private String payment;//代付者账户
+    private BigInteger fee;//发送者的扣费数量
     
     protected TrueRawTransaction(BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
-                           BigInteger value, String data, String fee, String payment) {
+                           BigInteger value, String data, BigInteger fee, String payment) {
         this.nonce = nonce;
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
@@ -39,27 +39,27 @@ public class TrueRawTransaction {
 
     public static TrueRawTransaction createContractTransaction(
             BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, BigInteger value,
-            String init, String fee, String payment) {
+            String init, BigInteger fee, String payment) {
 
         return new TrueRawTransaction(nonce, gasPrice, gasLimit, "", value, init,fee,payment);
     }
 
     public static TrueRawTransaction createEtherTransaction(
             BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
-            BigInteger value, String fee, String payment) {
+            BigInteger value, BigInteger fee, String payment) {
 
         return new TrueRawTransaction(nonce, gasPrice, gasLimit, to, value, "",fee,payment);
 
     }
 
     public static TrueRawTransaction createTransaction(
-            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, String data, String fee, String payment) {
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger fee, String payment) {
         return createTransaction(nonce, gasPrice, gasLimit, to, BigInteger.ZERO, data,fee,payment);
     }
 
     public static TrueRawTransaction createTransaction(
             BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to,
-            BigInteger value, String data, String fee, String payment) {
+            BigInteger value, String data, BigInteger fee, String payment) {
 
         return new TrueRawTransaction(nonce, gasPrice, gasLimit, to, value, data,fee,payment);
     }
@@ -88,7 +88,7 @@ public class TrueRawTransaction {
         return data;
     }
 
-    public String getFee() {
+    public BigInteger getFee() {
         return fee;
     }
 
