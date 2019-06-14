@@ -44,7 +44,7 @@ public abstract class TrueTransactionManager {
 
     protected TransactionReceipt executeTransaction(
             BigInteger gasPrice, BigInteger gasLimit, String to,
-            String data, BigInteger value, String fee, String payment)
+            String data, BigInteger value, BigInteger fee, String payment)
             throws IOException, TransactionException {
 
         EthSendTrueTransaction ethSendTrueTransaction = sendTrueTransaction(
@@ -54,7 +54,7 @@ public abstract class TrueTransactionManager {
 
     public abstract EthSendTrueTransaction sendTrueTransaction(
             BigInteger gasPrice, BigInteger gasLimit, String to,
-            String data, BigInteger value, String fee, String payment)
+            String data, BigInteger value, BigInteger fee, String payment)
             throws IOException;
 
     public String getFromAddress() {
