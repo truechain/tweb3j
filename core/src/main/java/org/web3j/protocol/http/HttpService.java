@@ -15,7 +15,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import com.stone.okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor;
 import okio.Buffer;
 import okio.BufferedSource;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ import static okhttp3.ConnectionSpec.CLEARTEXT;
 public class HttpService extends Service {
 
     /**
-     * Copied from {@link ConnectionSpec#APPROVED_CIPHER_SUITES}.
+     * Copied from {@link ConnectionSpec# APPROVED_CIPHER_SUITES}.
      */
     private static final CipherSuite[] INFURA_CIPHER_SUITES = new CipherSuite[] {
         CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
