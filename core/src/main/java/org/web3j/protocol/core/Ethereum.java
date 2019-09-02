@@ -112,9 +112,6 @@ public interface Ethereum {
 
     Request<?, org.web3j.protocol.core.methods.response.EthSendTransaction> ethSendRawTransaction(
             String signedTransactionData);
-    
-    Request<?, org.web3j.protocol.core.methods.response.EthSendTrueTransaction> ethSendTrueRawTransaction(
-        String signedTransactionData);
 
     Request<?, org.web3j.protocol.core.methods.response.EthCall> ethCall(
             org.web3j.protocol.core.methods.request.Transaction transaction,

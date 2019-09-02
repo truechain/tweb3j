@@ -54,43 +54,8 @@ public class Sign {
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair) {
         return signMessage(message, keyPair, true);
     }
-    
+
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair, boolean needToHash) {
-        BigInteger publicKey = keyPair.getPublicKey();
-        byte[] messageHash;
-        if (needToHash) {
-            messageHash = Hash.sha3(message);
-        } else {
-            messageHash = message;
-        }
-
-        ECDSASignature sig = keyPair.sign(messageHash);
-        // Now we have to work backwards to figure out the recId needed to recover the signature.
-        int recId = -1;
-        for (int i = 0; i < 4; i++) {
-            BigInteger k = recoverFromSignature(i, sig, messageHash);
-            if (k != null && k.equals(publicKey)) {
-                recId = i;
-                break;
-            }
-        }
-        if (recId == -1) {
-            throw new RuntimeException(
-                    "Could not construct a recoverable key. Are your credentials valid?");
-        }
-
-        int headerByte = recId + 27;
-
-        // 1 header + 32 bytes for R + 32 bytes for S
-        //byte v = (byte) headerByte;
-        int v = headerByte;
-        byte[] r = Numeric.toBytesPadded(sig.r, 32);
-        byte[] s = Numeric.toBytesPadded(sig.s, 32);
-
-        return new SignatureData(v, r, s);
-    }
-    
-    public static SignatureData signMessageP(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
         byte[] messageHash;
         if (needToHash) {

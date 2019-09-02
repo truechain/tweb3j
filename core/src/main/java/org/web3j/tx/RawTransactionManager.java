@@ -64,10 +64,9 @@ public class RawTransactionManager extends TransactionManager {
     }
 
     public RawTransactionManager(Web3j web3j, Credentials credentials) {
-        this(web3j, credentials, ChainId.TRUE_LOCALNET);
-        //this(web3j, credentials, 100);
+        this(web3j, credentials, ChainId.NONE);
     }
-    
+
     public RawTransactionManager(
             Web3j web3j, Credentials credentials, int attempts, int sleepDuration) {
         this(web3j, credentials, ChainId.NONE, attempts, sleepDuration);
@@ -113,6 +112,7 @@ public class RawTransactionManager extends TransactionManager {
     public String sign(RawTransaction rawTransaction) {
 
         byte[] signedMessage;
+
         if (chainId > ChainId.NONE) {
             signedMessage = TransactionEncoder.signMessage(rawTransaction, chainId, credentials);
         } else {
@@ -127,17 +127,14 @@ public class RawTransactionManager extends TransactionManager {
         String hexValue = sign(rawTransaction);
         EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
 
-        /*if (ethSendTransaction != null && !ethSendTransaction.hasError()) {
+        if (ethSendTransaction != null && !ethSendTransaction.hasError()) {
             String txHashLocal = Hash.sha3(hexValue);
             String txHashRemote = ethSendTransaction.getTransactionHash();
             if (!txHashVerifier.verify(txHashLocal, txHashRemote)) {
                 throw new TxHashMismatchException(txHashLocal, txHashRemote);
             }
-        }*/
-        if (ethSendTransaction != null && !ethSendTransaction.hasError()) {
-            return ethSendTransaction;
-        }else{
-            throw new IOException();
         }
+
+        return ethSendTransaction;
     }
 }

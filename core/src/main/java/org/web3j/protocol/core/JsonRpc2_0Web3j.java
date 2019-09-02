@@ -833,15 +833,4 @@ public class JsonRpc2_0Web3j implements Web3j {
             throw new RuntimeException("Failed to close web3j service", e);
         }
     }
-    
-    @Override
-    public Request<?, org.web3j.protocol.core.methods.response.EthSendTrueTransaction>
-            ethSendTrueRawTransaction(
-            String signedTransactionData) {
-        return new Request<>(
-                "etrue_sendTrueRawTransaction",
-                Arrays.asList(signedTransactionData),
-                web3jService,
-                org.web3j.protocol.core.methods.response.EthSendTrueTransaction.class);
-    }
 }

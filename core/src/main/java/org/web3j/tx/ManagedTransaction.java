@@ -8,7 +8,6 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthGasPrice;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
-import org.web3j.protocol.http.HttpService;
 
 
 /**
@@ -84,7 +83,7 @@ public abstract class ManagedTransaction {
     protected TransactionReceipt send(
             String to, String data, BigInteger value, BigInteger gasPrice, BigInteger gasLimit)
             throws IOException, TransactionException {
-        
+
         return transactionManager.executeTransaction(
                 gasPrice, gasLimit, to, data, value);
     }

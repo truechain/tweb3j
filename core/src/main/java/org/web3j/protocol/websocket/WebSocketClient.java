@@ -2,7 +2,8 @@ package org.web3j.protocol.websocket;
 
 import java.net.URI;
 import java.util.Map;
-import java.util.Optional;
+
+import java8.util.Optional;
 
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
@@ -13,11 +14,6 @@ import org.slf4j.LoggerFactory;
  * that will be called when a new message is received by the client.
  */
 public class WebSocketClient extends org.java_websocket.client.WebSocketClient {
-
-    public WebSocketClient(URI serverUri) {
-        super(serverUri);
-        // TODO Auto-generated constructor stub
-    }/*
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketClient.class);
 
@@ -61,36 +57,12 @@ public class WebSocketClient extends org.java_websocket.client.WebSocketClient {
         listenerOpt.ifPresent(listener -> listener.onError(e));
     }
 
-    *//**
+    /**
      * Set a listener that will be called when a new message is received by the client.
      *
      * @param listener WebSocket listener
-     *//*
+     */
     public void setListener(WebSocketListener listener) {
         this.listenerOpt = Optional.ofNullable(listener);
     }
-*/
-
-    @Override
-    public void onClose(int arg0, String arg1, boolean arg2) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void onError(Exception arg0) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void onMessage(String arg0) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void onOpen(ServerHandshake arg0) {
-        // TODO Auto-generated method stub
-        
-    }}
+}

@@ -8,9 +8,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
+import java8.util.Objects;
+import java8.util.Optional;
+import java8.util.stream.Collectors;
+import java8.util.stream.StreamSupport;
 
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
@@ -182,10 +184,6 @@ public abstract class Contract extends ManagedTransaction {
         }
 
         String code = Numeric.cleanHexPrefix(ethGetCode.getCode());
-        int metadataIndex = code.indexOf("a165627a7a72305820");
-        if (metadataIndex != -1) {
-            code = code.substring(0, metadataIndex);
-        }
         // There may be multiple contracts in the Solidity bytecode, hence we only check for a
         // match with a subset
         return !code.isEmpty() && contractBinary.contains(code);
@@ -529,7 +527,7 @@ public abstract class Contract extends ManagedTransaction {
 
     protected List<EventValues> extractEventParameters(
             Event event, TransactionReceipt transactionReceipt) {
-        return transactionReceipt.getLogs().stream()
+        return StreamSupport.stream(transactionReceipt.getLogs())
                 .map(log -> extractEventParameters(event, log))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -542,7 +540,7 @@ public abstract class Contract extends ManagedTransaction {
 
     protected List<EventValuesWithLog> extractEventParametersWithLog(
             Event event, TransactionReceipt transactionReceipt) {
-        return transactionReceipt.getLogs().stream()
+        return StreamSupport.stream(transactionReceipt.getLogs())
                 .map(log -> extractEventParametersWithLog(event, log))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
