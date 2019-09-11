@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class Transfer extends ManagedTransaction {
     //代付gas交易示例
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
+    public static void main2(String[] args) throws InterruptedException, ExecutionException {
         try {
             Web3j web3jt = Web3j.build(new HttpService("http://127.0.0.1:8888"));
             String to = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
@@ -64,7 +64,7 @@ public class Transfer extends ManagedTransaction {
                     fee,
                     payment);
 
-            byte[] signedMessage = TrueTransactionEncoder.signMessage_payment(trueRawTransaction, chainId, credentials, credentials_payment);
+            byte[] signedMessage = TrueTransactionEncoder.signMessage_fromAndPayment(trueRawTransaction, chainId, credentials, credentials_payment);
             String hexValue = Numeric.toHexString(signedMessage);
 
             EthSendTrueTransaction ethSendTrueTransaction = web3jt.ethSendTrueRawTransaction(hexValue).send();
@@ -82,7 +82,7 @@ public class Transfer extends ManagedTransaction {
     }
 
     //普通转账示例
-    public static void main2(String[] args) {
+    public static void main(String[] args) {
         // http://39.98.43.179:8888
         // https://rpc.truescan.net/testnet
         // Web3j web3j = Web3j.build(new

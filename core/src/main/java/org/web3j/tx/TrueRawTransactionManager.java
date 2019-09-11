@@ -1,33 +1,21 @@
 package org.web3j.tx;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
-import org.web3j.crypto.RawTransaction;
-import org.web3j.crypto.TransactionEncoder;
+import org.web3j.crypto.Sign.SignatureData;
 import org.web3j.crypto.TrueRawTransaction;
 import org.web3j.crypto.TrueTransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.EthSendTrueTransaction;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.exceptions.TxHashMismatchException;
 import org.web3j.tx.response.TransactionReceiptProcessor;
-import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 import org.web3j.utils.TxHashVerifier;
+
+import java.io.IOException;
+import java.math.BigInteger;
 
 /**
  * TransactionManager implementation using Ethereum wallet file to create and sign transactions
@@ -45,7 +33,7 @@ public class TrueRawTransactionManager extends TrueTransactionManager {
     static int chainId;
 
     protected TxHashVerifier txHashVerifier = new TxHashVerifier();
-    
+
     public TrueRawTransactionManager(Web3j web3j, Credentials credentials, byte chainId) {
         super(web3j, credentials.getAddress());
 
@@ -119,7 +107,7 @@ public class TrueRawTransactionManager extends TrueTransactionManager {
 
         return signAndSend(trueRawTransaction);
     }
-    
+
     /*
      * @param rawTransaction a RawTransaction istance to be signed
      * @return The transaction signed and encoded without ever broadcasting it
@@ -152,4 +140,31 @@ public class TrueRawTransactionManager extends TrueTransactionManager {
 
         return ethSendTrueTransaction;
     }
+
+    public String sign_payment(TrueRawTransaction trueRawTransaction, SignatureData eip155SignatureData, long chainId, Credentials credentials_payment) {
+
+        byte[] signedMessage;
+
+        signedMessage = TrueTransactionEncoder.signMessage_payment(trueRawTransaction, eip155SignatureData,
+                chainId, credentials_payment);
+
+        return Numeric.toHexString(signedMessage);
+    }
+
+    public EthSendTrueTransaction signAndSend_payment(TrueRawTransaction trueRawTransaction, SignatureData eip155SignatureData, long chainId, Credentials credentials_payment)
+            throws IOException {
+        String hexValue = sign_payment(trueRawTransaction, eip155SignatureData, chainId, credentials_payment);
+
+        EthSendTrueTransaction ethSendTrueTransaction = web3j.ethSendTrueRawTransaction(hexValue).send();
+
+        if (ethSendTrueTransaction != null && !ethSendTrueTransaction.hasError()) {
+            String txHashLocal = Hash.sha3(hexValue);
+            String txHashRemote = ethSendTrueTransaction.getTransactionHash();
+            if (!txHashVerifier.verify(txHashLocal, txHashRemote)) {
+                throw new TxHashMismatchException(txHashLocal, txHashRemote);
+            }
+        }
+        return ethSendTrueTransaction;
+    }
+
 }

@@ -1,16 +1,17 @@
 package org.web3j.crypto;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.web3j.crypto.Sign.SignatureData;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 import org.web3j.utils.Bytes;
 import org.web3j.utils.Numeric;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Create RLP encoded transaction, implementation as per p4 of the <a href="http://gavwood.com/paper.pdf">yellow
@@ -20,7 +21,7 @@ public class TrueTransactionEncoder {
 
     private static final int CHAIN_ID_INC = 35;
     private static final int LOWER_REAL_V = 27;
-    
+
     public static byte[] signMessage(TrueRawTransaction trueRawTransaction, Credentials credentials) {
         byte[] encodedTransaction = encode(trueRawTransaction);
         Sign.SignatureData signatureData = Sign.signMessage(
@@ -30,24 +31,34 @@ public class TrueTransactionEncoder {
     }
 
     public static byte[] signMessage(
-        TrueRawTransaction trueRawTransaction, long chainId, Credentials credentials) {
+            TrueRawTransaction trueRawTransaction, long chainId, Credentials credentials) {
         byte[] encodedTransaction = encode(trueRawTransaction, chainId);
-        
+
         Sign.SignatureData signatureData = Sign.signMessage(
                 encodedTransaction, credentials.getEcKeyPair());
         Sign.SignatureData eip155SignatureData = createEip155SignatureData(signatureData, chainId);
-        
+
         //二次签名
-        byte[] encodedTransactionP = encodeP(trueRawTransaction,eip155SignatureData,chainId);
+        byte[] encodedTransactionP = encodeP(trueRawTransaction, eip155SignatureData, chainId);
         Sign.SignatureData signatureDataP = Sign.signMessage(encodedTransactionP, credentials.getEcKeyPair());
         Sign.SignatureData eip155SignatureDataP = createEip155SignatureData(signatureDataP, chainId);
 
-        return encodeP(trueRawTransaction, eip155SignatureData,eip155SignatureDataP);
+        return encodeP(trueRawTransaction, eip155SignatureData, eip155SignatureDataP);
     }
-    
-    //代付签名
-    public static byte[] signMessage_payment(TrueRawTransaction trueRawTransaction, long chainId,
-        Credentials credentials, Credentials credentials_payment) {
+
+    //代付者签名
+    public static byte[] signMessage_payment(TrueRawTransaction trueRawTransaction, SignatureData eip155SignatureData, long chainId,Credentials credentials_payment) {
+        // 二次签名
+        byte[] encodedTransactionP = encodeP(trueRawTransaction, eip155SignatureData, chainId);
+        Sign.SignatureData signatureDataP = Sign.signMessage(encodedTransactionP, credentials_payment.getEcKeyPair());
+        Sign.SignatureData eip155SignatureDataP = createEip155SignatureData(signatureDataP, chainId);
+
+        return encodeP(trueRawTransaction, eip155SignatureData, eip155SignatureDataP);
+    }
+
+    //发送者和代付者签名
+    public static byte[] signMessage_fromAndPayment(TrueRawTransaction trueRawTransaction, long chainId,
+                                                    Credentials credentials, Credentials credentials_payment) {
 
         byte[] encodedTransaction = encode(trueRawTransaction, chainId);
         Sign.SignatureData signatureData = Sign.signMessage(encodedTransaction, credentials.getEcKeyPair());
@@ -83,7 +94,7 @@ public class TrueTransactionEncoder {
 
     public static byte[] encode(TrueRawTransaction trueRawTransaction, long chainId) {
         BigInteger v = BigInteger.valueOf(chainId);
-        Sign.SignatureData signatureData = new Sign.SignatureData(v.toByteArray(), new byte[] {}, new byte[] {});
+        Sign.SignatureData signatureData = new Sign.SignatureData(v.toByteArray(), new byte[]{}, new byte[]{});
 //        Sign.SignatureData signatureData = new Sign.SignatureData(longToBytes(chainId), new byte[] {}, new byte[] {});
         return encode(trueRawTransaction, signatureData);
     }
@@ -104,7 +115,7 @@ public class TrueTransactionEncoder {
 
     public static byte[] encodeP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData, long chainId) {
         BigInteger v = BigInteger.valueOf(chainId);
-        Sign.SignatureData signatureDataP = new Sign.SignatureData(v.toByteArray(), new byte[] {}, new byte[] {});
+        Sign.SignatureData signatureDataP = new Sign.SignatureData(v.toByteArray(), new byte[]{}, new byte[]{});
 //        Sign.SignatureData signatureDataP = new Sign.SignatureData(longToBytes(chainId), new byte[] {}, new byte[] {});
         return encodeP(trueRawTransaction, signatureData, signatureDataP);
     }
@@ -116,7 +127,7 @@ public class TrueTransactionEncoder {
     }
 
     private static byte[] encodeP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData,
-        Sign.SignatureData signatureDataP) {
+                                  Sign.SignatureData signatureDataP) {
         List<RlpType> values = asRlpValuesP(trueRawTransaction, signatureData, signatureDataP);
         RlpList rlpList = new RlpList(values);
         return RlpEncoder.encode(rlpList);
@@ -161,7 +172,7 @@ public class TrueTransactionEncoder {
     }
 
     static List<RlpType> asRlpValuesP(TrueRawTransaction trueRawTransaction, Sign.SignatureData signatureData,
-        Sign.SignatureData signatureDataP) {
+                                      Sign.SignatureData signatureDataP) {
         List<RlpType> result = new ArrayList<>();
 
         result.add(RlpString.create(trueRawTransaction.getNonce()));
