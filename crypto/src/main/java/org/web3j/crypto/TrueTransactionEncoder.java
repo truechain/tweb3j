@@ -22,6 +22,7 @@ public class TrueTransactionEncoder {
     private static final int CHAIN_ID_INC = 35;
     private static final int LOWER_REAL_V = 27;
 
+    //发送者签名，chainId 为空
     public static byte[] signMessage(TrueRawTransaction trueRawTransaction, Credentials credentials) {
         byte[] encodedTransaction = encode(trueRawTransaction);
         Sign.SignatureData signatureData = Sign.signMessage(
@@ -30,20 +31,15 @@ public class TrueTransactionEncoder {
         return encode(trueRawTransaction, signatureData);
     }
 
+    //发送者签名
     public static byte[] signMessage(
             TrueRawTransaction trueRawTransaction, long chainId, Credentials credentials) {
         byte[] encodedTransaction = encode(trueRawTransaction, chainId);
 
-        Sign.SignatureData signatureData = Sign.signMessage(
-                encodedTransaction, credentials.getEcKeyPair());
+        Sign.SignatureData signatureData = Sign.signMessage(encodedTransaction, credentials.getEcKeyPair());
         Sign.SignatureData eip155SignatureData = createEip155SignatureData(signatureData, chainId);
 
-        //二次签名
-        byte[] encodedTransactionP = encodeP(trueRawTransaction, eip155SignatureData, chainId);
-        Sign.SignatureData signatureDataP = Sign.signMessage(encodedTransactionP, credentials.getEcKeyPair());
-        Sign.SignatureData eip155SignatureDataP = createEip155SignatureData(signatureDataP, chainId);
-
-        return encodeP(trueRawTransaction, eip155SignatureData, eip155SignatureDataP);
+        return encode(trueRawTransaction, eip155SignatureData);
     }
 
     //代付者签名
