@@ -70,6 +70,19 @@ public class Sign {
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair) {
         return signMessage(message, keyPair, true);
     }
+    public static String bytesToHexString(byte[] bArr) {
+        StringBuffer sb = new StringBuffer(bArr.length);
+        String sTmp;
+
+        for (int i = 0; i < bArr.length; i++) {
+            sTmp = Integer.toHexString(0xFF & bArr[i]);
+            if (sTmp.length() < 2)
+                sb.append(0);
+            sb.append(sTmp.toUpperCase());
+        }
+
+        return sb.toString();
+    }
 
     public static SignatureData signMessage(byte[] message, ECKeyPair keyPair, boolean needToHash) {
         BigInteger publicKey = keyPair.getPublicKey();
@@ -101,7 +114,6 @@ public class Sign {
         byte[] v = new byte[] {(byte) headerByte};
         byte[] r = Numeric.toBytesPadded(sig.r, 32);
         byte[] s = Numeric.toBytesPadded(sig.s, 32);
-
         return new SignatureData(v, r, s);
     }
 

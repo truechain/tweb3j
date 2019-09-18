@@ -89,9 +89,9 @@ public class TrueTransactionEncoder {
     }
 
     public static byte[] encode(TrueRawTransaction trueRawTransaction, long chainId) {
-        BigInteger v = BigInteger.valueOf(chainId);
-        Sign.SignatureData signatureData = new Sign.SignatureData(v.toByteArray(), new byte[]{}, new byte[]{});
-//        Sign.SignatureData signatureData = new Sign.SignatureData(longToBytes(chainId), new byte[] {}, new byte[] {});
+//        BigInteger v = BigInteger.valueOf(chainId);
+//        Sign.SignatureData signatureData = new Sign.SignatureData(v.toByteArray(), new byte[]{}, new byte[]{});
+        Sign.SignatureData signatureData = new Sign.SignatureData(longToBytes(chainId), new byte[] {}, new byte[] {});
         return encode(trueRawTransaction, signatureData);
     }
 
@@ -160,7 +160,7 @@ public class TrueTransactionEncoder {
         }
 
         if (signatureData != null) {
-            result.add(RlpString.create(signatureData.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getV())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getR())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getS())));
         }
@@ -200,13 +200,13 @@ public class TrueTransactionEncoder {
         }
 
         if (signatureData != null) {
-            result.add(RlpString.create(signatureData.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getV())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getR())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getS())));
         }
 
         if (signatureDataP != null) {
-            result.add(RlpString.create(signatureDataP.getV()));
+            result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureDataP.getV())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureDataP.getR())));
             result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureDataP.getS())));
         }

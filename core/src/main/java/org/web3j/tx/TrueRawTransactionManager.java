@@ -1,10 +1,7 @@
 package org.web3j.tx;
 
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.Hash;
+import org.web3j.crypto.*;
 import org.web3j.crypto.Sign.SignatureData;
-import org.web3j.crypto.TrueRawTransaction;
-import org.web3j.crypto.TrueTransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
@@ -141,7 +138,8 @@ public class TrueRawTransactionManager extends TrueTransactionManager {
         return ethSendTrueTransaction;
     }
 
-    public String sign_payment(TrueRawTransaction trueRawTransaction, SignatureData eip155SignatureData, long chainId, Credentials credentials_payment) {
+    //代付者签名接口
+    public String sign_payment(TrueRawTransaction trueRawTransaction, Sign.SignatureData eip155SignatureData, long chainId, Credentials credentials_payment) {
 
         byte[] signedMessage;
 
@@ -151,7 +149,8 @@ public class TrueRawTransactionManager extends TrueTransactionManager {
         return Numeric.toHexString(signedMessage);
     }
 
-    public EthSendTrueTransaction signAndSend_payment(TrueRawTransaction trueRawTransaction, SignatureData eip155SignatureData, long chainId, Credentials credentials_payment)
+    //针对发送者已签名，需要代付者签名调用的接口
+    public EthSendTrueTransaction signAndSend_payment(TrueRawTransaction trueRawTransaction, Sign.SignatureData eip155SignatureData, long chainId, Credentials credentials_payment)
             throws IOException {
         String hexValue = sign_payment(trueRawTransaction, eip155SignatureData, chainId, credentials_payment);
 
