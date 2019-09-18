@@ -52,6 +52,48 @@ public class ECRecoverTest {
                         (byte[]) Arrays.copyOfRange(signatureBytes, 0, 32),
                         (byte[]) Arrays.copyOfRange(signatureBytes, 32, 64));
 
+
+        String addressRecovered = null;
+        boolean match = false;
+
+        // Iterate for each possible key to recover
+        for (int i = 0; i < 4; i++) {
+            BigInteger publicKey =
+                    Sign.recoverFromSignature(
+                            (byte) i,
+                            new ECDSASignature(
+                                    new BigInteger(1, sd.getR()), new BigInteger(1, sd.getS())),
+                            msgHash);
+
+            if (publicKey != null) {
+                addressRecovered = "0x" + Keys.getAddress(publicKey);
+
+                if (addressRecovered.equals(address)) {
+                    match = true;
+                    break;
+                }
+            }
+        }
+
+        assertThat(addressRecovered, is(address));
+        assertTrue(match);
+    }
+
+    @Test
+    public void testRecoverAddressFromSignature2() {
+
+        String address = "0xa23Bd55b0f3559a92823b5b50b5f02ed6E58364B";
+
+        byte[] msgHash = Numeric.hexStringToByteArray("0xbf487a7950961bf424813a1731c7faada17567781c5545583c11c13a38235f20");
+
+        //接收前端传入的v，r，s来直接操作
+        long v =Long.parseLong("9403", 16)-2*18928-8;
+
+        byte[] r = Numeric.hexStringToByteArray("0xeefaf02106e8e72bf99342894d8d2a6d019c73094023300beca885bff9840630");
+        byte[] s = Numeric.hexStringToByteArray("0x533f6a4bc1f484e2c188c58d2f6156c9a7e30bba6f2c005898f501e037cdb9");
+        Sign.SignatureData sd = new Sign.SignatureData((byte)(27), r, s);
+
+
         String addressRecovered = null;
         boolean match = false;
 
