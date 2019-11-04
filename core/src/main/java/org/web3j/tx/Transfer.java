@@ -149,15 +149,6 @@ public class Transfer extends ManagedTransaction {
             Sign.SignatureData signatureData = Sign.signMessage(encodedTransaction, credentials_from.getEcKeyPair());
             Sign.SignatureData eip155SignatureData = TrueTransactionEncoder.createEip155SignatureData(signatureData, chainId);
 
-//            byte[] v = Numeric.hexStringToByteArray("0x9404");
-//            byte[] r = Numeric.hexStringToByteArray("0xf79bd00522b6b26bcbbf1cba350a33ba1c8df8bc35493e960a3ad8296eca9f37");
-//            byte[] s = Numeric.hexStringToByteArray("0x5d4c76385a8490668346b615f5c07cd2e1042f75dbcb0dafd7d47ac29840dd60");
-
-
-//            Sign.SignatureData eip155SignatureData = new Sign.SignatureData(v, r, s);
-//            System.out.println("eip155SignatureData=" + eip155SignatureData.getV().toString());
-//            System.out.println("eip155SignatureData=" + eip155SignatureData.getR().toString());
-//            System.out.println("eip155SignatureData=" + eip155SignatureData.getS().toString());
 
             byte[] signedMessage = TrueTransactionEncoder.signMessage_payment(trueRawTransaction, eip155SignatureData, chainId, credentials_payment);
             String hexValue = Numeric.toHexString(signedMessage);
@@ -360,7 +351,7 @@ public class Transfer extends ManagedTransaction {
                                                            BigDecimal value, Convert.Unit unit, int chainId)
             throws InterruptedException, IOException, TransactionException {
 
-        TransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
+        TransactionManager transactionManager = new RawTransactionManager(web3j, credentials,(long)(chainId));
 
         return new RemoteCall<>(() -> new Transfer(web3j, transactionManager).send(toAddress, value, unit));
     }

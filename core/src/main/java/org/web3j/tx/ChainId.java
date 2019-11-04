@@ -31,5 +31,5 @@ public class ChainId {
 
     public static final int TRUE_MAINNET = 19330;
     public static final int TRUE_TESTNET = 18928;
-    public static final int TRUE_LOCALNET = 400;
+    public static final int TRUE_LOCALNET = 18928;
 }
