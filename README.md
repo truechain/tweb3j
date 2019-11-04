@@ -142,7 +142,7 @@ import org.web3j.utils.Numeric;
  */
 public class Transfer extends ManagedTransaction {
     //代付gas示例
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
+    public static void txSendWithPayment_exmaple(String[] args) throws InterruptedException, ExecutionException {
         try {
             Web3j web3jt = Web3j.build(new HttpService("http://39.98.43.179:8888"));
             String to = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
@@ -196,11 +196,7 @@ public class Transfer extends ManagedTransaction {
     }
     
     //转账示例
-    public static void main2(String[] args) {
-        // http://39.98.43.179:8888
-        // https://rpc.truescan.net/testnet
-        // Web3j web3j = Web3j.build(new
-        // HttpService("https://rpc.truescan.net/testnet"));
+    public static void txSend_exmaple(String[] args) {
         Web3j web3j = Web3j.build(new HttpService("https://rpc.truescan.net/testnet"));
         String toAddress = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
         Credentials credentials = Credentials.create("0x647EEEB80193A47A02D31939AF29EFA006DBE6DB45C8806AF764C18B262BB90B");
@@ -270,7 +266,7 @@ public class Transfer extends ManagedTransaction {
 			BigDecimal value, Convert.Unit unit, int chainId)
 			throws InterruptedException, IOException, TransactionException {
 
-		TransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
+		TransactionManager transactionManager = new RawTransactionManager(web3j, credentials, ,(long)(chainId));
 
 		return new RemoteCall<>(() -> new Transfer(web3j, transactionManager).send(toAddress, value, unit));
 	}
