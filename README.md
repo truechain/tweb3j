@@ -201,7 +201,7 @@ public class Transfer extends ManagedTransaction {
         // https://rpc.truescan.net/testnet
         // Web3j web3j = Web3j.build(new
         // HttpService("https://rpc.truescan.net/testnet"));
-        Web3j web3j = Web3j.build(new HttpService("http://39.98.43.179:8888"));
+        Web3j web3j = Web3j.build(new HttpService("https://rpc.truescan.net/testnet"));
         String toAddress = "0x04d2252a3e0ca7c2aa81247ca33060855a34a808";
         Credentials credentials = Credentials.create("0x647EEEB80193A47A02D31939AF29EFA006DBE6DB45C8806AF764C18B262BB90B");
         int chainId = 18928;
