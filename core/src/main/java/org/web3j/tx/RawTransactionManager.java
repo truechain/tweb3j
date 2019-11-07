@@ -66,7 +66,7 @@ public class RawTransactionManager extends TransactionManager {
     }
 
     public RawTransactionManager(Web3j web3j, Credentials credentials) {
-        this(web3j, credentials, ChainId.TRUE_LOCALNET);
+        this(web3j, credentials, ChainId.TRUE_MAINNET);
         //this(web3j, credentials, 100);
     }
 
