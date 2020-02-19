@@ -3,54 +3,7 @@ package org.web3j.protocol.core;
 import java.math.BigInteger;
 
 import org.web3j.protocol.core.methods.request.ShhFilter;
-import org.web3j.protocol.core.methods.response.DbGetHex;
-import org.web3j.protocol.core.methods.response.DbGetString;
-import org.web3j.protocol.core.methods.response.DbPutHex;
-import org.web3j.protocol.core.methods.response.DbPutString;
-import org.web3j.protocol.core.methods.response.EthAccounts;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthBlockNumber;
-import org.web3j.protocol.core.methods.response.EthCoinbase;
-import org.web3j.protocol.core.methods.response.EthCompileLLL;
-import org.web3j.protocol.core.methods.response.EthCompileSerpent;
-import org.web3j.protocol.core.methods.response.EthCompileSolidity;
-import org.web3j.protocol.core.methods.response.EthEstimateGas;
-import org.web3j.protocol.core.methods.response.EthFilter;
-import org.web3j.protocol.core.methods.response.EthGasPrice;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.EthGetBlockTransactionCountByHash;
-import org.web3j.protocol.core.methods.response.EthGetBlockTransactionCountByNumber;
-import org.web3j.protocol.core.methods.response.EthGetCode;
-import org.web3j.protocol.core.methods.response.EthGetCompilers;
-import org.web3j.protocol.core.methods.response.EthGetStorageAt;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthGetUncleCountByBlockHash;
-import org.web3j.protocol.core.methods.response.EthGetUncleCountByBlockNumber;
-import org.web3j.protocol.core.methods.response.EthGetWork;
-import org.web3j.protocol.core.methods.response.EthHashrate;
-import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.EthMining;
-import org.web3j.protocol.core.methods.response.EthProtocolVersion;
-import org.web3j.protocol.core.methods.response.EthSign;
-import org.web3j.protocol.core.methods.response.EthSubmitHashrate;
-import org.web3j.protocol.core.methods.response.EthSubmitWork;
-import org.web3j.protocol.core.methods.response.EthSyncing;
-import org.web3j.protocol.core.methods.response.EthTransaction;
-import org.web3j.protocol.core.methods.response.EthUninstallFilter;
-import org.web3j.protocol.core.methods.response.NetListening;
-import org.web3j.protocol.core.methods.response.NetPeerCount;
-import org.web3j.protocol.core.methods.response.NetVersion;
-import org.web3j.protocol.core.methods.response.ShhAddToGroup;
-import org.web3j.protocol.core.methods.response.ShhHasIdentity;
-import org.web3j.protocol.core.methods.response.ShhMessages;
-import org.web3j.protocol.core.methods.response.ShhNewFilter;
-import org.web3j.protocol.core.methods.response.ShhNewGroup;
-import org.web3j.protocol.core.methods.response.ShhNewIdentity;
-import org.web3j.protocol.core.methods.response.ShhUninstallFilter;
-import org.web3j.protocol.core.methods.response.ShhVersion;
-import org.web3j.protocol.core.methods.response.Web3ClientVersion;
-import org.web3j.protocol.core.methods.response.Web3Sha3;
+import org.web3j.protocol.core.methods.response.*;
 
 /**
  * Core Ethereum JSON-RPC API.
@@ -112,7 +65,7 @@ public interface Ethereum {
 
     Request<?, org.web3j.protocol.core.methods.response.EthSendTransaction> ethSendRawTransaction(
             String signedTransactionData);
-    
+
     Request<?, org.web3j.protocol.core.methods.response.EthSendTrueTransaction> ethSendTrueRawTransaction(
             String signedTransactionData);
 
@@ -128,6 +81,16 @@ public interface Ethereum {
     Request<?, EthBlock> ethGetBlockByNumber(
             DefaultBlockParameter defaultBlockParameter,
             boolean returnFullTransactionObjects);
+
+    Request<?, EtrueSnailBlock> etrueGetSnailBlockByNumber(
+            DefaultBlockParameter defaultBlockParameter, boolean inclFruit);
+
+    Request<?, EtrueSnailBlock> etrueGetSnailBlockByHash(
+            String snailBlockHash, boolean inclFruit);
+
+    Request<?, EtrueCommittee> ethGetCommitteeByNumber(
+            DefaultBlockParameter defaultBlockParameter);
+
 
     Request<?, EthTransaction> ethGetTransactionByHash(String transactionHash);
 
@@ -156,6 +119,8 @@ public interface Ethereum {
     Request<?, EthFilter> ethNewFilter(org.web3j.protocol.core.methods.request.EthFilter ethFilter);
 
     Request<?, EthFilter> ethNewBlockFilter();
+
+    Request<?, EthFilter> etrueNewSnailBlockFilter();
 
     Request<?, EthFilter> ethNewPendingTransactionFilter();
 

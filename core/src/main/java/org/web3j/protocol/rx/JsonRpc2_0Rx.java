@@ -31,12 +31,16 @@ import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.filters.BlockFilter;
 import org.web3j.protocol.core.filters.LogFilter;
 import org.web3j.protocol.core.filters.PendingTransactionFilter;
+import org.web3j.protocol.core.filters.SnailBlockFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EtrueSnailBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.utils.Flowables;
 
-/** web3j reactive API implementation. */
+/**
+ * web3j reactive API implementation.
+ */
 public class JsonRpc2_0Rx {
 
     private final Web3j web3j;
@@ -54,6 +58,15 @@ public class JsonRpc2_0Rx {
                 subscriber -> {
                     BlockFilter blockFilter = new BlockFilter(web3j, subscriber::onNext);
                     run(blockFilter, subscriber, pollingInterval);
+                },
+                BackpressureStrategy.BUFFER);
+    }
+
+    public Flowable<String> etrueSnailBlockHashFlowable(long pollingInterval) {
+        return Flowable.create(
+                subscriber -> {
+                    SnailBlockFilter snailBlockFilter = new SnailBlockFilter(web3j, subscriber::onNext);
+                    run(snailBlockFilter, subscriber, pollingInterval);
                 },
                 BackpressureStrategy.BUFFER);
     }
@@ -110,6 +123,16 @@ public class JsonRpc2_0Rx {
                                         .flowable());
     }
 
+    public Flowable<EtrueSnailBlock> snailBlockFlowable(boolean inclFruit, long pollingInterval) {
+        return etrueSnailBlockHashFlowable(pollingInterval)
+                .flatMap(
+                        snailBlockHash ->
+
+                                web3j.etrueGetSnailBlockByHash(snailBlockHash, inclFruit)
+                                        .flowable());
+    }
+
+
     public Flowable<EthBlock> replayBlocksFlowable(
             DefaultBlockParameter startBlock,
             DefaultBlockParameter endBlock,
@@ -155,16 +178,16 @@ public class JsonRpc2_0Rx {
                     .flatMap(
                             i ->
                                     web3j.ethGetBlockByNumber(
-                                                    new DefaultBlockParameterNumber(i),
-                                                    fullTransactionObjects)
+                                            new DefaultBlockParameterNumber(i),
+                                            fullTransactionObjects)
                                             .flowable());
         } else {
             return Flowables.range(startBlockNumber, endBlockNumber, false)
                     .flatMap(
                             i ->
                                     web3j.ethGetBlockByNumber(
-                                                    new DefaultBlockParameterNumber(i),
-                                                    fullTransactionObjects)
+                                            new DefaultBlockParameterNumber(i),
+                                            fullTransactionObjects)
                                             .flowable());
         }
     }

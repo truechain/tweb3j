@@ -33,7 +33,9 @@ import org.web3j.protocol.core.methods.response.EthFilter;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.EthUninstallFilter;
 
-/** Class for creating managed filter requests with callbacks. */
+/**
+ * Class for creating managed filter requests with callbacks.
+ */
 public abstract class Filter<T> {
 
     private static final Logger log = LoggerFactory.getLogger(Filter.class);
@@ -125,6 +127,7 @@ public abstract class Filter<T> {
     private void pollFilter(EthFilter ethFilter) {
         EthLog ethLog = null;
         try {
+//            System.out.println("filterId=" + filterId);
             ethLog = web3j.ethGetFilterChanges(filterId).send();
         } catch (IOException e) {
             throwException(e);

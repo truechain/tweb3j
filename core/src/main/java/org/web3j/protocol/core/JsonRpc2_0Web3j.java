@@ -28,66 +28,21 @@ import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.methods.request.ShhFilter;
 import org.web3j.protocol.core.methods.request.ShhPost;
 import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.DbGetHex;
-import org.web3j.protocol.core.methods.response.DbGetString;
-import org.web3j.protocol.core.methods.response.DbPutHex;
-import org.web3j.protocol.core.methods.response.DbPutString;
-import org.web3j.protocol.core.methods.response.EthAccounts;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthBlockNumber;
-import org.web3j.protocol.core.methods.response.EthCoinbase;
-import org.web3j.protocol.core.methods.response.EthCompileLLL;
-import org.web3j.protocol.core.methods.response.EthCompileSerpent;
-import org.web3j.protocol.core.methods.response.EthCompileSolidity;
-import org.web3j.protocol.core.methods.response.EthEstimateGas;
-import org.web3j.protocol.core.methods.response.EthFilter;
-import org.web3j.protocol.core.methods.response.EthGasPrice;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.EthGetBlockTransactionCountByHash;
-import org.web3j.protocol.core.methods.response.EthGetBlockTransactionCountByNumber;
-import org.web3j.protocol.core.methods.response.EthGetCode;
-import org.web3j.protocol.core.methods.response.EthGetCompilers;
-import org.web3j.protocol.core.methods.response.EthGetStorageAt;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthGetUncleCountByBlockHash;
-import org.web3j.protocol.core.methods.response.EthGetUncleCountByBlockNumber;
-import org.web3j.protocol.core.methods.response.EthGetWork;
-import org.web3j.protocol.core.methods.response.EthHashrate;
-import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.EthMining;
-import org.web3j.protocol.core.methods.response.EthProtocolVersion;
-import org.web3j.protocol.core.methods.response.EthSign;
-import org.web3j.protocol.core.methods.response.EthSubmitHashrate;
-import org.web3j.protocol.core.methods.response.EthSubmitWork;
-import org.web3j.protocol.core.methods.response.EthSubscribe;
-import org.web3j.protocol.core.methods.response.EthSyncing;
-import org.web3j.protocol.core.methods.response.EthTransaction;
-import org.web3j.protocol.core.methods.response.EthUninstallFilter;
-import org.web3j.protocol.core.methods.response.Log;
-import org.web3j.protocol.core.methods.response.NetListening;
-import org.web3j.protocol.core.methods.response.NetPeerCount;
-import org.web3j.protocol.core.methods.response.NetVersion;
-import org.web3j.protocol.core.methods.response.ShhAddToGroup;
-import org.web3j.protocol.core.methods.response.ShhHasIdentity;
-import org.web3j.protocol.core.methods.response.ShhMessages;
-import org.web3j.protocol.core.methods.response.ShhNewFilter;
-import org.web3j.protocol.core.methods.response.ShhNewGroup;
-import org.web3j.protocol.core.methods.response.ShhNewIdentity;
-import org.web3j.protocol.core.methods.response.ShhUninstallFilter;
-import org.web3j.protocol.core.methods.response.ShhVersion;
-import org.web3j.protocol.core.methods.response.Web3ClientVersion;
-import org.web3j.protocol.core.methods.response.Web3Sha3;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.rx.JsonRpc2_0Rx;
 import org.web3j.protocol.websocket.events.LogNotification;
 import org.web3j.protocol.websocket.events.NewHeadsNotification;
 import org.web3j.utils.Async;
 import org.web3j.utils.Numeric;
 
-/** JSON-RPC 2.0 factory implementation. */
+/**
+ * JSON-RPC 2.0 factory implementation.
+ */
 public class JsonRpc2_0Web3j implements Web3j {
 
     public static final int DEFAULT_BLOCK_TIME = 15 * 1000;
+
+    public static final int DEFAULT_SNAILBLOCK_TIME = 5 * 60 * 1000;
 
     protected final Web3jService web3jService;
     private final JsonRpc2_0Rx web3jRx;
@@ -287,7 +242,7 @@ public class JsonRpc2_0Web3j implements Web3j {
 
     @Override
     public Request<?, org.web3j.protocol.core.methods.response.EthSendTransaction>
-            ethSendTransaction(Transaction transaction) {
+    ethSendTransaction(Transaction transaction) {
         return new Request<>(
                 "eth_sendTransaction",
                 Arrays.asList(transaction),
@@ -297,7 +252,7 @@ public class JsonRpc2_0Web3j implements Web3j {
 
     @Override
     public Request<?, org.web3j.protocol.core.methods.response.EthSendTransaction>
-            ethSendRawTransaction(String signedTransactionData) {
+    ethSendRawTransaction(String signedTransactionData) {
         return new Request<>(
                 "eth_sendRawTransaction",
                 Arrays.asList(signedTransactionData),
@@ -339,6 +294,35 @@ public class JsonRpc2_0Web3j implements Web3j {
                 Arrays.asList(defaultBlockParameter.getValue(), returnFullTransactionObjects),
                 web3jService,
                 EthBlock.class);
+    }
+
+    @Override
+    public Request<?, EtrueSnailBlock> etrueGetSnailBlockByNumber(
+            DefaultBlockParameter defaultBlockParameter, boolean inclFruit) {
+        return new Request<>(
+                "etrue_getSnailBlockByNumber",
+                Arrays.asList(defaultBlockParameter.getValue(), inclFruit),
+                web3jService,
+                EtrueSnailBlock.class);
+    }
+
+    public Request<?, EtrueSnailBlock> etrueGetSnailBlockByHash(
+            String snailBlockHash, boolean inclFruit) {
+        return new Request<>(
+                "etrue_getSnailBlockByHash",
+                Arrays.asList(snailBlockHash, inclFruit),
+                web3jService,
+                EtrueSnailBlock.class);
+    }
+
+    @Override
+    public Request<?, EtrueCommittee> ethGetCommitteeByNumber(
+            DefaultBlockParameter defaultBlockParameter) {
+        return new Request<>(
+                "etrue_getCommittee",
+                Arrays.asList(defaultBlockParameter.getValue()),
+                web3jService,
+                EtrueCommittee.class);
     }
 
     @Override
@@ -448,6 +432,17 @@ public class JsonRpc2_0Web3j implements Web3j {
                 web3jService,
                 EthFilter.class);
     }
+
+    @Override
+    public Request<?, EthFilter> etrueNewSnailBlockFilter() {
+        return new Request<>(
+                "etrue_newSnailBlockFilter",
+//                "etrue_newBlockFilter",
+                Collections.<String>emptyList(),
+                web3jService,
+                EthFilter.class);
+    }
+
 
     @Override
     public Request<?, EthFilter> ethNewPendingTransactionFilter() {
@@ -693,13 +688,18 @@ public class JsonRpc2_0Web3j implements Web3j {
 
     @Override
     public Flowable<org.web3j.protocol.core.methods.response.Transaction>
-            pendingTransactionFlowable() {
+    pendingTransactionFlowable() {
         return web3jRx.pendingTransactionFlowable(blockTime);
     }
 
     @Override
     public Flowable<EthBlock> blockFlowable(boolean fullTransactionObjects) {
         return web3jRx.blockFlowable(fullTransactionObjects, blockTime);
+    }
+
+    @Override
+    public Flowable<EtrueSnailBlock> snailBlockFlowable(boolean inclFruit) {
+        return web3jRx.snailBlockFlowable(inclFruit, DEFAULT_SNAILBLOCK_TIME);
     }
 
     @Override
@@ -737,14 +737,14 @@ public class JsonRpc2_0Web3j implements Web3j {
 
     @Override
     public Flowable<org.web3j.protocol.core.methods.response.Transaction>
-            replayPastTransactionsFlowable(
-                    DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+    replayPastTransactionsFlowable(
+            DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
         return web3jRx.replayTransactionsFlowable(startBlock, endBlock);
     }
 
     @Override
     public Flowable<org.web3j.protocol.core.methods.response.Transaction>
-            replayPastTransactionsFlowable(DefaultBlockParameter startBlock) {
+    replayPastTransactionsFlowable(DefaultBlockParameter startBlock) {
         return web3jRx.replayPastTransactionsFlowable(startBlock);
     }
 
@@ -757,7 +757,7 @@ public class JsonRpc2_0Web3j implements Web3j {
 
     @Override
     public Flowable<org.web3j.protocol.core.methods.response.Transaction>
-            replayPastAndFutureTransactionsFlowable(DefaultBlockParameter startBlock) {
+    replayPastAndFutureTransactionsFlowable(DefaultBlockParameter startBlock) {
         return web3jRx.replayPastAndFutureTransactionsFlowable(startBlock, blockTime);
     }
 
@@ -781,4 +781,5 @@ public class JsonRpc2_0Web3j implements Web3j {
                 web3jService,
                 org.web3j.protocol.core.methods.response.EthSendTrueTransaction.class);
     }
+
 }

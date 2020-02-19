@@ -81,7 +81,13 @@ public class EthBlock extends Response<EthBlock.Block> {
         private List<String> uncles;
         private List<String> sealFields;
 
-        public Block() {}
+        private List<CommitteeInfo.CommitteeMember> switchInfos;
+        private String SnailNumber;
+        private String maker;
+        private String committeeRoot;
+
+        public Block() {
+        }
 
         public Block(
                 String number,
@@ -105,7 +111,11 @@ public class EthBlock extends Response<EthBlock.Block> {
                 String timestamp,
                 List<TransactionResult> transactions,
                 List<String> uncles,
-                List<String> sealFields) {
+                List<String> sealFields,
+                List<CommitteeInfo> committeeInfos,
+                String SnailNumber,
+                String committeeRoot,
+                String maker) {
             this.number = number;
             this.hash = hash;
             this.parentHash = parentHash;
@@ -128,6 +138,42 @@ public class EthBlock extends Response<EthBlock.Block> {
             this.transactions = transactions;
             this.uncles = uncles;
             this.sealFields = sealFields;
+            this.switchInfos = switchInfos;
+            this.SnailNumber = SnailNumber;
+            this.committeeRoot = committeeRoot;
+            this.maker = maker;
+        }
+
+        public String getCommitteeRoot() {
+            return committeeRoot;
+        }
+
+        public void setCommitteeRoot(String committeeRoot) {
+            this.committeeRoot = committeeRoot;
+        }
+
+        public String getMaker() {
+            return maker;
+        }
+
+        public void setMaker(String maker) {
+            this.maker = maker;
+        }
+
+        public String getSnailNumber() {
+            return SnailNumber;
+        }
+
+        public void setSnailNumber(String snailNumber) {
+            SnailNumber = snailNumber;
+        }
+
+        public List<CommitteeInfo.CommitteeMember> getSwitchInfos() {
+            return switchInfos;
+        }
+
+        public void setSwitchInfos(List<CommitteeInfo.CommitteeMember> switchInfos) {
+            this.switchInfos = switchInfos;
         }
 
         public BigInteger getNumber() {
@@ -469,8 +515,8 @@ public class EthBlock extends Response<EthBlock.Block> {
             result =
                     31 * result
                             + (getTransactionsRoot() != null
-                                    ? getTransactionsRoot().hashCode()
-                                    : 0);
+                            ? getTransactionsRoot().hashCode()
+                            : 0);
             result = 31 * result + (getStateRoot() != null ? getStateRoot().hashCode() : 0);
             result = 31 * result + (getReceiptsRoot() != null ? getReceiptsRoot().hashCode() : 0);
             result = 31 * result + (getAuthor() != null ? getAuthor().hashCode() : 0);
@@ -480,8 +526,8 @@ public class EthBlock extends Response<EthBlock.Block> {
             result =
                     31 * result
                             + (getTotalDifficultyRaw() != null
-                                    ? getTotalDifficultyRaw().hashCode()
-                                    : 0);
+                            ? getTotalDifficultyRaw().hashCode()
+                            : 0);
             result = 31 * result + (getExtraData() != null ? getExtraData().hashCode() : 0);
             result = 31 * result + (getSizeRaw() != null ? getSizeRaw().hashCode() : 0);
             result = 31 * result + (getGasLimitRaw() != null ? getGasLimitRaw().hashCode() : 0);
@@ -501,7 +547,8 @@ public class EthBlock extends Response<EthBlock.Block> {
     public static class TransactionHash implements TransactionResult<String> {
         private String value;
 
-        public TransactionHash() {}
+        public TransactionHash() {
+        }
 
         public TransactionHash(String value) {
             this.value = value;
@@ -538,7 +585,8 @@ public class EthBlock extends Response<EthBlock.Block> {
 
     public static class TransactionObject extends Transaction
             implements TransactionResult<Transaction> {
-        public TransactionObject() {}
+        public TransactionObject() {
+        }
 
         public TransactionObject(
                 String hash,
