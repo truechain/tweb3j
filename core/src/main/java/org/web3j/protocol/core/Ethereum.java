@@ -85,6 +85,18 @@ public interface Ethereum {
     Request<?, EtrueSnailBlock> etrueGetSnailBlockByNumber(
             DefaultBlockParameter defaultBlockParameter, boolean inclFruit);
 
+    Request<?, EtrueSnailHash> GetSnailHashByNumber(
+            DefaultBlockParameter defaultBlockParameter);
+
+    Request<?, ETrueBlockNumber> GetCurrentSnailNumber();
+
+
+    Request<?, EtrueBalanceChange> getStateChangeByFastNumber(
+            DefaultBlockParameter defaultBlockParameter);
+
+    Request<?, EtrueBalanceChange> getBalanceChangeBySnailNumber(
+            DefaultBlockParameter defaultBlockParameter);
+
     Request<?, EtrueSnailBlock> etrueGetSnailBlockByHash(
             String snailBlockHash, boolean inclFruit);
 

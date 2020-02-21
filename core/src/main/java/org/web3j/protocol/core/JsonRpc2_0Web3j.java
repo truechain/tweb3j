@@ -306,6 +306,43 @@ public class JsonRpc2_0Web3j implements Web3j {
                 EtrueSnailBlock.class);
     }
 
+    @Override
+    public Request<?, EtrueSnailHash> GetSnailHashByNumber(
+            DefaultBlockParameter defaultBlockParameter) {
+        return new Request<>(
+                "etrue_getSnailHashByNumber",
+                Arrays.asList(defaultBlockParameter.getValue()),
+                web3jService,
+                EtrueSnailHash.class);
+    }
+
+    @Override
+    public Request<?, ETrueBlockNumber> GetCurrentSnailNumber() {
+        return new Request<>(
+                "etrue_snailBlockNumber",
+                Arrays.asList(),
+                web3jService,
+                ETrueBlockNumber.class);
+    }
+
+    @Override
+    public Request<?, EtrueBalanceChange> getStateChangeByFastNumber(DefaultBlockParameter defaultBlockParameter) {
+        return new Request<>(
+                "etrue_getStateChangeByFastNumber",
+                Arrays.asList(defaultBlockParameter.getValue()),
+                web3jService,
+                EtrueBalanceChange.class);
+    }
+
+    @Override
+    public Request<?, EtrueBalanceChange> getBalanceChangeBySnailNumber(DefaultBlockParameter defaultBlockParameter) {
+        return new Request<>(
+                "etrue_getBalanceChangeBySnailNumber",
+                Arrays.asList(defaultBlockParameter.getValue()),
+                web3jService,
+                EtrueBalanceChange.class);
+    }
+
     public Request<?, EtrueSnailBlock> etrueGetSnailBlockByHash(
             String snailBlockHash, boolean inclFruit) {
         return new Request<>(

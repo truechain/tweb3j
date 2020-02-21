@@ -8,7 +8,7 @@ import org.web3j.utils.Numeric;
 /**
  * eth_True_blockNumber.
  */
-public class EthTrueBlockNumber extends Response<String> {
+public class ETrueBlockNumber extends Response<String> {
     public BigInteger getTrueBlockNumber() {
         return Numeric.decodeQuantity(getResult());
     }

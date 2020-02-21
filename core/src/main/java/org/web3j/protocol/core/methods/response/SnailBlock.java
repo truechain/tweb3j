@@ -38,6 +38,8 @@ public class SnailBlock {
     private String endFruitNumber;
     private List<Fruit> fruits;
 
+
+
     public SnailBlock() {
     }
 
@@ -169,14 +171,8 @@ public class SnailBlock {
     public void setEndFruitNumber(String endFruitNumber) {
         this.endFruitNumber = endFruitNumber;
     }
-//
-//    public List<String> getFruits() {
-//        return fruits;
-//    }
-//
-//    public void setFruits(List<String> fruits) {
-//        this.fruits = fruits;
-//    }
+
+
 
     public static class ResponseDeserialiser extends JsonDeserializer<SnailBlock> {
         private ObjectReader objectReader = ObjectMapperFactory.getObjectReader();
