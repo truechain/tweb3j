@@ -65,9 +65,9 @@ public class CommitteeInfo {
 
     public static class CommitteeMember {
         public String coinbase;
-        public String publickey;
+        public String PKey;
         public String flag;
-        public String mType;
+        public String type;
 
         public String getCoinbase() {
             return coinbase;
@@ -75,14 +75,6 @@ public class CommitteeInfo {
 
         public void setCoinbase(String coinbase) {
             this.coinbase = coinbase;
-        }
-
-        public String getPublickey() {
-            return publickey;
-        }
-
-        public void setPublickey(String publickey) {
-            this.publickey = publickey;
         }
 
         public String getFlag() {
@@ -93,12 +85,20 @@ public class CommitteeInfo {
             this.flag = flag;
         }
 
-        public String getmType() {
-            return mType;
+        public String getPKey() {
+            return PKey;
         }
 
-        public void setmType(String mType) {
-            this.mType = mType;
+        public void setPKey(String PKey) {
+            this.PKey = PKey;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
         }
 
         public static class ResponseDeserialiser extends JsonDeserializer<CommitteeMember> {

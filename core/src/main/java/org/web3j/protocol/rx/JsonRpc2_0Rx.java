@@ -127,7 +127,6 @@ public class JsonRpc2_0Rx {
         return etrueSnailBlockHashFlowable(pollingInterval)
                 .flatMap(
                         snailBlockHash ->
-
                                 web3j.etrueGetSnailBlockByHash(snailBlockHash, inclFruit)
                                         .flowable());
     }

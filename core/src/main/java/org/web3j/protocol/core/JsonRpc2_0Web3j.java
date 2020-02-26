@@ -40,7 +40,7 @@ import org.web3j.utils.Numeric;
  */
 public class JsonRpc2_0Web3j implements Web3j {
 
-    public static final int DEFAULT_BLOCK_TIME = 15 * 1000;
+    public static final int DEFAULT_BLOCK_TIME = 3 * 1000;
 
     public static final int DEFAULT_SNAILBLOCK_TIME = 5 * 60 * 1000;
 
@@ -361,6 +361,16 @@ public class JsonRpc2_0Web3j implements Web3j {
                 web3jService,
                 EtrueCommittee.class);
     }
+
+    @Override
+    public Request<?, EtrueCommitteeNumber> currentCommitteeNumber() {
+        return new Request<>(
+                "etrue_committeeNumber",
+                Arrays.asList(),
+                web3jService,
+                EtrueCommitteeNumber.class);
+    }
+
 
     @Override
     public Request<?, EthTransaction> ethGetTransactionByHash(String transactionHash) {

@@ -104,6 +104,8 @@ public interface Ethereum {
             DefaultBlockParameter defaultBlockParameter);
 
 
+    Request<?, EtrueCommitteeNumber> currentCommitteeNumber();
+
     Request<?, EthTransaction> ethGetTransactionByHash(String transactionHash);
 
     Request<?, EthTransaction> ethGetTransactionByBlockHashAndIndex(
